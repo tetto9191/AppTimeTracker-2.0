@@ -13,10 +13,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
     - name: Set version from tag
       shell: bash
@@ -25,8 +23,11 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "Version set to $VERSION"
 
+    - name: Restore NuGet packages
+      run: msbuild AppTimeTracker.csproj /t:Restore /p:Configuration=Release /p:Version=${{ env.VERSION }}
+
     - name: Publish
-      run: dotnet publish AppTimeTracker.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -p:PublishSingleFile=true -o publish
+      run: msbuild AppTimeTracker.csproj /t:Publish /p:Configuration=Release /p:RuntimeIdentifier=win-x64 /p:SelfContained=true /p:PublishSingleFile=true /p:Version=${{ env.VERSION }} /p:PublishDir=publish
 
     - name: Create zip artifact
       shell: pwsh
