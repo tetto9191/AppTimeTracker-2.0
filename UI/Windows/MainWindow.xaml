@@ -1,0 +1,186 @@
+﻿<Window x:Class="AppTimeTracker.UI.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:AppTimeTracker.UI.Converters"
+        mc:Ignorable="d"
+        Title="AppTimeTracker" Height="700" Width="900"
+        Icon="/Resources/Icons/app.ico"
+        WindowStartupLocation="CenterScreen"
+        MinWidth="800" MinHeight="600"
+        UseLayoutRounding="True"
+        Closing="MainWindow_Closing">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Styles/DarkTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+            <ContextMenu x:Key="AppListContextMenu" x:Shared="false">
+                <MenuItem Header="Переименовать" Click="RenameProcess_Click"/>
+                <MenuItem Header="Выбрать иконку" Click="SelectIcon_Click"/>
+                <Separator/>
+                <MenuItem Header="Добавить в черный список" Click="AddToBlacklist_Click"/>
+                <MenuItem Header="Остановить отслеживание" Click="ExcludeFromTracking_Click"/>
+            </ContextMenu>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" 
+                Background="{StaticResource WindowTitleBackground}" 
+                BorderBrush="{StaticResource WindowBorder}"
+                BorderThickness="0,0,0,1"
+                Height="32"
+                x:Name="WindowTitleBar"
+                WindowChrome.IsHitTestVisibleInChrome="True"
+                MouseLeftButtonDown="WindowTitleBar_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="10,0">
+                    <Image Source="/Resources/Icons/app.ico" Width="16" Height="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="AppTimeTracker" 
+                              VerticalAlignment="Center" 
+                              Margin="8,0,0,0"
+                              Foreground="{StaticResource WindowTitleForeground}"
+                              FontWeight="SemiBold"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="MinimizeButton" 
+                            Content="─" 
+                            Tag="Minimize"
+                            Style="{StaticResource CustomWindowButtonStyle}"
+                            Click="MinimizeButton_Click"
+                            ToolTip="Свернуть"/>
+                    <Button x:Name="MaximizeRestoreButton" 
+                            Content="□" 
+                            Tag="Maximize"
+                            Style="{StaticResource CustomWindowButtonStyle}"
+                            Click="MaximizeRestoreButton_Click"
+                            ToolTip="Развернуть"/>
+                    <Button x:Name="CloseButton" 
+                            Content="✕" 
+                            Tag="Close"
+                            Style="{StaticResource CloseWindowButtonStyle}"
+                            Click="CloseButton_Click"
+                            ToolTip="Закрыть"
+                            FontWeight="Bold"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" 
+                Background="{StaticResource DarkBackground2}" 
+                BorderBrush="{StaticResource BorderColor}"
+                BorderThickness="0,0,0,1"
+                Padding="15,10">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Статистика" Margin="5" Click="OpenStats_Click" MinWidth="110" MinHeight="36"/>
+                <Button Content="Настройки" Margin="5" Click="OpenSettings_Click" MinWidth="110" MinHeight="36"/>
+                <Separator Width="20"/>
+                <Button x:Name="ToggleTrackingBtn" Content="Пауза" Margin="5" 
+                        Click="ToggleTracking_Click" MinWidth="110" MinHeight="36"/>
+                <Button Content="В трей" Margin="5" Click="MinimizeToTray_Click" MinWidth="110" MinHeight="36"/>
+                <Separator Width="20"/>
+                <Button Content="Выход" Margin="5" Click="Exit_Click" MinWidth="110" MinHeight="36"
+                        Background="{StaticResource ErrorColor}" Foreground="White"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="15">
+            <ListBox x:Name="TrackedAppsList" 
+                     ItemsSource="{Binding TrackedApps}"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     ScrollViewer.CanContentScroll="True"
+                     BorderBrush="{StaticResource BorderColor}"
+                     BorderThickness="1"
+                     ContextMenu="{StaticResource AppListContextMenu}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="10,8" BorderBrush="{StaticResource BorderColor}" BorderThickness="0,0,0,1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Image Grid.Column="0" 
+                   Source="{Binding Icon}" 
+                   Width="16" Height="16" 
+                   VerticalAlignment="Center"
+                   Margin="0,0,10,0"/>
+
+                                <TextBlock Grid.Column="1" 
+                       Text="{Binding AppName}" 
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip="{Binding AppName}"/>
+                                <TextBlock Grid.Column="2" 
+                       Text="{Binding TotalTime, Converter={StaticResource TimeSpanToStringConverter}}" 
+                       VerticalAlignment="Center"
+                       Margin="20,0,0,0"
+                       MinWidth="120"
+                       HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="3" 
+                       Text="{Binding LastTracked, StringFormat='{}{0:HH:mm}'}" 
+                       VerticalAlignment="Center"
+                       Margin="20,0,0,0"
+                       MinWidth="80"
+                       HorizontalAlignment="Right"/>
+                                <TextBlock x:Name="IsBlacklistedIndicator" 
+                       Grid.Column="4"
+                       Text="⚫" 
+                       FontSize="12"
+                       Foreground="{StaticResource BlacklistIndicator}" 
+                       Visibility="Collapsed"
+                       ToolTip="В черном списке"
+                       Margin="20,0,0,0"
+                       VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsBlacklisted}" Value="True">
+                                <Setter TargetName="IsBlacklistedIndicator" Property="Visibility" Value="Visible"/>
+                                <Setter Property="TextBlock.Foreground" Value="{StaticResource ErrorColor}"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <StatusBar Grid.Row="3" Height="45">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" Text="{Binding CurrentStatusText}" 
+                          VerticalAlignment="Center" Margin="10,0,0,0"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Приложений:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="ActiveProcessesCount" Text="0" VerticalAlignment="Center"
+                              FontWeight="Bold" Foreground="{StaticResource AccentColor}"/>
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

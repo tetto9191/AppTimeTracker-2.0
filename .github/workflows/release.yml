@@ -1,0 +1,46 @@
+﻿name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Set version from tag
+      shell: bash
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Version set to $VERSION"
+
+    - name: Publish
+      run: dotnet publish AppTimeTracker.csproj -c Release -r win-x64 --self-contained true -p:Version=${{ env.VERSION }} -p:PublishSingleFile=true -o publish
+
+    - name: Create zip artifact
+      run: |
+        cd publish
+        7z a ../AppTimeTracker.zip AppTimeTracker.exe
+      shell: bash
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: Release ${{ env.VERSION }}
+        files: AppTimeTracker.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
